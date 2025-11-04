@@ -1,0 +1,5 @@
+log.info(String message)
+  Logs an info message.
+
+log.warning(String message)
+  Logs a warning message.
