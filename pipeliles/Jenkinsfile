@@ -1,0 +1,50 @@
+@Library('my-shared-library') _  // Loads the library (version optional: @main)
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven3'  // Assumes you configured a Maven tool named 'Maven3' in Global Tools
+        jdk 'JDK8'      // Assumes JDK8 tool configured
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    gitCheckout(branch: 'master', url: 'https://github.com/tejapatel205/java-design-patterns.git', credentialsId: 'Jenkins-library-cred')
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                script {
+                    echo "Running Build"
+                    mavenBuild('clean compile')
+                }
+            }
+        }
+        stage("Test") {
+            steps {
+                script {
+                    echo "Running unint ests"
+                    mavenBuild('test')
+                }
+            }
+            post{
+                always {
+                    junit '**/target/surefire-reports/*.xml'  // Publish test results
+                }
+            }
+        }
+        stage('Package') {
+            steps {
+                echo 'Packaging JAR...'
+                sh 'mvn package -DskipTests'  // Package without re-running tests
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: false  // Archive JARs
+                }
+            }
+        }
+    }
+}
